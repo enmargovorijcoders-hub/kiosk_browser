@@ -226,13 +226,9 @@ public class MainActivity extends AppCompatActivity {
         settings.setDatabaseEnabled(true);
         settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         settings.setAllowFileAccess(false);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            settings.setAllowFileAccessFromFileURLs(false);
-            settings.setAllowUniversalAccessFromFileURLs(false);
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
-        }
+        settings.setAllowFileAccessFromFileURLs(false);
+        settings.setAllowUniversalAccessFromFileURLs(false);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
         settings.setSupportMultipleWindows(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
@@ -246,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && request != null && request.getUrl() != null) {
+                if (request != null && request.getUrl() != null) {
                     return handleUrlNavigation(request.getUrl().toString());
                 }
                 return false;
@@ -335,23 +331,18 @@ public class MainActivity extends AppCompatActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         applyImmersiveFlags();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            try {
-                ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-                if (am != null && am.getLockTaskModeState() == ActivityManager.LOCK_TASK_MODE_NONE) {
-                    startLockTask();
-                }
-            } catch (Exception ignored) {
-            }
+        try {
+            startLockTask();
+        } catch (Exception ignored) {
         }
     }
 
     private void applyImmersiveFlags() {
+        View decorView = getWindow().getDecorView();
+        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            View decorView = getWindow().getDecorView();
-            int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
             decorView.setSystemUiVisibility(uiOptions);
         }
     }
@@ -363,11 +354,9 @@ public class MainActivity extends AppCompatActivity {
         relockHandler.removeCallbacks(bringBackRunnable);
         urlInput.setText("");
         adminPanel.setVisibility(View.GONE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            try {
-                stopLockTask();
-            } catch (Exception ignored) {
-            }
+        try {
+            stopLockTask();
+        } catch (Exception ignored) {
         }
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         finish();
@@ -414,4 +403,3 @@ public class MainActivity extends AppCompatActivity {
         super.onBackPressed();
     }
 }
-```[cite: 22]
