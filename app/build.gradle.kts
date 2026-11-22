@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = "com.enmar.kioskbrowser"
-        minSdk = 14
+        minSdk = 21
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
