@@ -21,7 +21,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="KIOSK MODE ACTIVE"
+            android:text="KIOSK LOCKED (PIN 2583)"
             android:textColor="#FFFFFF"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -37,7 +37,7 @@
             android:textSize="12sp" />
     </LinearLayout>
 
-    <!-- Admin controls: the ONLY place the URL is shown, and only after PIN 2583 is verified -->
+    <!-- Admin controls: visible only after PIN 2583 is verified -->
     <LinearLayout
         android:id="@+id/adminPanel"
         android:layout_width="match_parent"
@@ -67,6 +67,50 @@
             android:textColor="#000000"
             android:textColorHint="#666666"
             android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/zoomLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:text="Page Zoom: 100%"
+            android:textColor="#E0E0E0"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/zoomOutButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="6dp"
+                android:layout_weight="1"
+                android:text="Zoom -"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/zoomResetButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="6dp"
+                android:layout_marginRight="6dp"
+                android:layout_weight="1"
+                android:text="100%"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/zoomInButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="6dp"
+                android:layout_weight="1"
+                android:text="Zoom +"
+                android:textSize="12sp" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -98,7 +142,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="6dp"
                 android:layout_weight="1"
-                android:text="Exit Kiosk"
+                android:text="Exit App"
                 android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>
