@@ -30,7 +30,7 @@ jobs:
         run: |
           keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias mykey -storepass password123 -keypass password123 -dname "CN=Enmar, OU=Dev, O=Enmar, L=Prishtina, S=Kosovo, C=XK"
           BUILD_TOOLS=$(ls -d "$ANDROID_HOME/build-tools/"* | sort -V | tail -n 1)
-          "$BUILD_TOOLS/zipalign" -v -p 4 app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/app-release-aligned.apk
+          "$BUILD_TOOLS/zipalign" -v -p 4 app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/app-release-aligned.apk
           "$BUILD_TOOLS/apksigner" sign --ks release.jks --ks-key-alias mykey --ks-pass pass:password123 --key-pass pass:password123 --out app/build/outputs/apk/release/app-release-signed.apk app/build/outputs/apk/release/app-release-aligned.apk
 
       - uses: actions/upload-artifact@v4
