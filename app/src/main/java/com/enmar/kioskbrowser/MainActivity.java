@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (!isAdminUnlocked) {
-                    Toast.makeText(MainActivity.this, "Enter PIN 2583 first", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Unlock admin panel first", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 applyZoom(currentZoomPercent - ZOOM_STEP, prefs, true);
@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (!isAdminUnlocked) {
-                    Toast.makeText(MainActivity.this, "Enter PIN 2583 first", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Unlock admin panel first", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 applyZoom(DEFAULT_ZOOM, prefs, true);
@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (!isAdminUnlocked) {
-                    Toast.makeText(MainActivity.this, "Enter PIN 2583 first", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Unlock admin panel first", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 applyZoom(currentZoomPercent + ZOOM_STEP, prefs, true);
@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (!isAdminUnlocked) {
-                    Toast.makeText(MainActivity.this, "Enter PIN 2583 first", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Unlock admin panel first", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 String raw = urlInput.getText().toString().trim();
@@ -271,12 +271,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void showPinDialog(final Runnable onSuccess) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Kiosk PIN Required");
-        builder.setMessage("Enter PIN 2583:");
+        builder.setTitle("Unlock Required");
+        builder.setMessage("Enter access code:");
 
         final EditText pinInput = new EditText(this);
         pinInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-        pinInput.setHint("PIN");
+        pinInput.setHint("Code");
         builder.setView(pinInput);
 
         builder.setPositiveButton("Verify", new DialogInterface.OnClickListener() {
@@ -286,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
                 if (KIOSK_PIN.equals(entered)) {
                     onSuccess.run();
                 } else {
-                    Toast.makeText(MainActivity.this, "Incorrect PIN", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Incorrect code", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -315,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
         isAdminUnlocked = false;
         urlInput.setText("");
         adminPanel.setVisibility(View.GONE);
-        unlockButton.setText("PIN");
+        unlockButton.setText("Unlock");
         engageKioskMode();
     }
 
@@ -325,8 +325,8 @@ public class MainActivity extends AppCompatActivity {
         isAllowingExit = false;
         urlInput.setText("");
         adminPanel.setVisibility(View.GONE);
-        unlockButton.setText("PIN");
-        statusLabel.setText("KIOSK LOCKED (PIN 2583)");
+        unlockButton.setText("Unlock");
+        statusLabel.setText("KIOSK LOCKED");
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         applyImmersiveFlags();
@@ -397,7 +397,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if (isKioskLocked && !isAllowingExit) {
-            Toast.makeText(this, "Locked: enter PIN 2583 to exit", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Kiosk locked", Toast.LENGTH_SHORT).show();
             return;
         }
         super.onBackPressed();
