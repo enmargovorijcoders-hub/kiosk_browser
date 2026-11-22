@@ -5,10 +5,12 @@ import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.view.View;
@@ -29,17 +31,47 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String PREFS_NAME = "kiosk_prefs";
     private static final String KEY_URL = "kiosk_url";
-    private static final String DEFAULT_URL = "https://example.com";
+    private static final String KEY_ZOOM = "kiosk_zoom_percent";
+    private static final String DEFAULT_URL = "https://room-status-info-1.web.app/";
+    private static final int DEFAULT_ZOOM = 100;
+    private static final int MIN_ZOOM = 50;
+    private static final int MAX_ZOOM = 250;
+    private static final int ZOOM_STEP = 10;
     private static final String KIOSK_PIN = "2583";
 
     private WebView webView;
     private LinearLayout adminPanel;
     private EditText urlInput;
     private TextView statusLabel;
+    private TextView zoomLabel;
     private Button unlockButton;
 
     private boolean isKioskLocked = true;
     private boolean isAdminUnlocked = false;
+    private boolean isAllowingExit = false;
+    private int currentZoomPercent = DEFAULT_ZOOM;
+
+    private final Handler relockHandler = new Handler();
+    private final Runnable bringBackRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isKioskLocked && !isAllowingExit) {
+                try {
+                    ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                    if (am != null) {
+                        am.moveTaskToFront(getTaskId(), ActivityManager.MOVE_TASK_WITH_HOME);
+                    }
+                } catch (Exception ignored) {
+                }
+                Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                try {
+                    startActivity(intent);
+                } catch (Exception ignored) {
+                }
+            }
+        }
+    };
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -51,16 +83,22 @@ public class MainActivity extends AppCompatActivity {
         adminPanel = findViewById(R.id.adminPanel);
         urlInput = findViewById(R.id.urlInput);
         statusLabel = findViewById(R.id.statusLabel);
+        zoomLabel = findViewById(R.id.zoomLabel);
         unlockButton = findViewById(R.id.unlockButton);
+        Button zoomOutButton = findViewById(R.id.zoomOutButton);
+        Button zoomResetButton = findViewById(R.id.zoomResetButton);
+        Button zoomInButton = findViewById(R.id.zoomInButton);
         Button saveUrlButton = findViewById(R.id.saveUrlButton);
         Button relockButton = findViewById(R.id.relockButton);
         Button exitKioskButton = findViewById(R.id.exitKioskButton);
 
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        final SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         String savedUrl = prefs.getString(KEY_URL, DEFAULT_URL);
+        currentZoomPercent = clampZoom(prefs.getInt(KEY_ZOOM, DEFAULT_ZOOM));
         urlInput.setText("");
 
         configureWebView();
+        applyZoom(currentZoomPercent, prefs, false);
         webView.loadUrl(savedUrl);
 
         unlockButton.setOnClickListener(new View.OnClickListener() {
@@ -76,6 +114,39 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                 }
+            }
+        });
+
+        zoomOutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!isAdminUnlocked) {
+                    Toast.makeText(MainActivity.this, "Enter PIN 2583 first", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                applyZoom(currentZoomPercent - ZOOM_STEP, prefs, true);
+            }
+        });
+
+        zoomResetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!isAdminUnlocked) {
+                    Toast.makeText(MainActivity.this, "Enter PIN 2583 first", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                applyZoom(DEFAULT_ZOOM, prefs, true);
+            }
+        });
+
+        zoomInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!isAdminUnlocked) {
+                    Toast.makeText(MainActivity.this, "Enter PIN 2583 first", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                applyZoom(currentZoomPercent + ZOOM_STEP, prefs, true);
             }
         });
 
@@ -128,19 +199,44 @@ public class MainActivity extends AppCompatActivity {
         engageKioskMode();
     }
 
+    private int clampZoom(int value) {
+        if (value < MIN_ZOOM) {
+            return MIN_ZOOM;
+        }
+        if (value > MAX_ZOOM) {
+            return MAX_ZOOM;
+        }
+        return value;
+    }
+
+    private void applyZoom(int zoomPercent, SharedPreferences prefs, boolean persist) {
+        currentZoomPercent = clampZoom(zoomPercent);
+        webView.getSettings().setTextZoom(currentZoomPercent);
+        zoomLabel.setText("Page Zoom: " + currentZoomPercent + "%");
+        if (persist && prefs != null) {
+            prefs.edit().putInt(KEY_ZOOM, currentZoomPercent).apply();
+        }
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     private void configureWebView() {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
+        settings.setDatabaseEnabled(true);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         settings.setAllowFileAccess(false);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             settings.setAllowFileAccessFromFileURLs(false);
             settings.setAllowUniversalAccessFromFileURLs(false);
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+        }
         settings.setSupportMultipleWindows(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
+        settings.setTextZoom(currentZoomPercent);
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -154,6 +250,12 @@ public class MainActivity extends AppCompatActivity {
                     return handleUrlNavigation(request.getUrl().toString());
                 }
                 return false;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                view.getSettings().setTextZoom(currentZoomPercent);
             }
         });
     }
@@ -174,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
     private void showPinDialog(final Runnable onSuccess) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Kiosk PIN Required");
-        builder.setMessage("Enter PIN for admin panel:");
+        builder.setMessage("Enter PIN 2583:");
 
         final EditText pinInput = new EditText(this);
         pinInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
@@ -224,10 +326,11 @@ public class MainActivity extends AppCompatActivity {
     private void engageKioskMode() {
         isKioskLocked = true;
         isAdminUnlocked = false;
+        isAllowingExit = false;
         urlInput.setText("");
         adminPanel.setVisibility(View.GONE);
         unlockButton.setText("PIN");
-        statusLabel.setText("KIOSK MODE ACTIVE");
+        statusLabel.setText("KIOSK LOCKED (PIN 2583)");
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         applyImmersiveFlags();
@@ -256,6 +359,8 @@ public class MainActivity extends AppCompatActivity {
     private void exitKioskAndClose() {
         isKioskLocked = false;
         isAdminUnlocked = false;
+        isAllowingExit = true;
+        relockHandler.removeCallbacks(bringBackRunnable);
         urlInput.setText("");
         adminPanel.setVisibility(View.GONE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -269,23 +374,44 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if (isKioskLocked && !isAllowingExit) {
+            relockHandler.removeCallbacks(bringBackRunnable);
+            relockHandler.postDelayed(bringBackRunnable, 150);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        relockHandler.removeCallbacks(bringBackRunnable);
+        if (isKioskLocked && !isAllowingExit) {
+            applyImmersiveFlags();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        relockHandler.removeCallbacks(bringBackRunnable);
+        super.onDestroy();
+    }
+
+    @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus && isKioskLocked) {
+        if (hasFocus && isKioskLocked && !isAllowingExit) {
             applyImmersiveFlags();
         }
     }
 
     @Override
     public void onBackPressed() {
-        if (isKioskLocked && !isAdminUnlocked) {
-            Toast.makeText(this, "Kiosk locked: enter PIN 2583 to exit", Toast.LENGTH_SHORT).show();
+        if (isKioskLocked && !isAllowingExit) {
+            Toast.makeText(this, "Locked: enter PIN 2583 to exit", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
+        super.onBackPressed();
     }
 }
+```[cite: 22]
