@@ -6,7 +6,7 @@
     android:background="#111111"
     android:orientation="vertical">
 
-    <!-- Top bar: no URL shown here -->
+    <!-- Top bar: no URL or PIN shown here -->
     <LinearLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
@@ -21,7 +21,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="KIOSK LOCKED (PIN 2583)"
+            android:text="KIOSK LOCKED"
             android:textColor="#FFFFFF"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -33,11 +33,11 @@
             android:minHeight="36dp"
             android:paddingLeft="12dp"
             android:paddingRight="12dp"
-            android:text="PIN"
+            android:text="Unlock"
             android:textSize="12sp" />
     </LinearLayout>
 
-    <!-- Admin controls: visible only after PIN 2583 is verified -->
+    <!-- Admin controls: visible only after unlocking -->
     <LinearLayout
         android:id="@+id/adminPanel"
         android:layout_width="match_parent"
